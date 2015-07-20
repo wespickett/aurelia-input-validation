@@ -14,6 +14,7 @@ import {FormValidity} from './formValidity';
 @customAttribute('validation')
 @inject(Element, ObserverLocator, builtInValidator, FormValidity)
 export class Validation {
+    @bindable required;
 
     constructor(element, observerLocator, builtInValidator, FormValidity) {
         this.element = element;
@@ -23,10 +24,13 @@ export class Validation {
         this.observerLocator.getObserver(this.element, 'value')
                             .subscribe(this.validationValueChanged.bind(this));
 
+        //check for static or dynamic required attribute
+        this.isRequired = this.element.hasAttribute('required');
+        this.observerLocator.getObserver(this.element, 'required')
+                            .subscribe(this.requiredChanged.bind(this));
+
         //disable browser validation
         this.element.form.noValidate = true;
-
-        this.isRequired = this.element.hasAttribute('required');
 
         this.formValidity = FormValidity.constructor.getInstance(this.element.form, this.isRequired);
 
@@ -55,6 +59,8 @@ export class Validation {
             if (!this.currentValue && this.isRequired) {
                 isValid = false;
                 errorMsg = errorMsg || 'This field is required.'; //TODO make message a value from a strings file
+            } else if (!this.currentValue && !this.isRequired) {
+                isValid = true;
             }
 
             //set form validity state to disable/enable submit button
@@ -97,6 +103,24 @@ export class Validation {
     valueChanged(newValue) {
         this.validationType = newValue;
         this.validate();
+    }
+
+    requiredChanged(newValue) {
+        this.isRequired = !!newValue;
+    }
+
+    unsetValidity() {
+        if (this.formValidity) {
+            this.formValidity.unsetValidityState(this);
+        }
+    }
+
+    unbind() {
+        this.unsetValidity();
+    }
+
+    detached() {
+        this.unsetValidity();
     }
 
 }
