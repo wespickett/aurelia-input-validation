@@ -1,6 +1,6 @@
 export class FormValidity {
 
-    static formValidityMap = new Map();
+    static formValidityMap = new WeakMap();
 
     internalValidityStateMap = new Map();
 
@@ -30,10 +30,14 @@ export class FormValidity {
         return sum === 0;
     }
 
-    setValidityState(inputContext, value) {
+    setValidityState(inputValidatorContext, value) {
 
-        this.internalValidityStateMap.set(inputContext, !!value);
+        this.internalValidityStateMap.set(inputValidatorContext, !!value);
 
         this.submitButton.prop('disabled', !this.getValidityState());
+    }
+
+    unsetValidityState(inputValidatorContext) {
+        this.internalValidityStateMap.delete(inputValidatorContext);
     }
 }
